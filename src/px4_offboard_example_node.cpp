@@ -9,10 +9,20 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <sensor_msgs/Image.h>
+
+using namespace std;
 
 mavros_msgs::State current_state;
+ros::Publisher image_pub;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
+}
+
+void camera_cb(const sensor_msgs::Image::ConstPtr& msg)
+{
+    //cout << "Inside camera_cb" << endl;
+    image_pub.publish(msg);
 }
 
 int main(int argc, char **argv)
@@ -22,6 +32,11 @@ int main(int argc, char **argv)
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
             ("mavros/state", 10, state_cb);
+    ros::Subscriber camera_sub = nh.subscribe<sensor_msgs::Image>
+            ("iris_1/camera_down/image_raw", 10, camera_cb);
+    image_pub = nh.advertise<sensor_msgs::Image>
+            ("/camera_rect/image_rect", 10);
+
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
@@ -33,7 +48,8 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     // wait for FCU connection
-    while(ros::ok() && !current_state.connected){
+    while(ros::ok() && !current_state.connected)
+    {
         ros::spinOnce();
         rate.sleep();
     }
@@ -63,25 +79,33 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
 
     ros::Time last_setpose = ros::Time::now();
-
-    while(ros::ok()){
+    int count = 0;
+    while(ros::ok())
+    {
         if( current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0))){
+            (ros::Time::now() - last_request > ros::Duration(5.0)))
+            {
             if( set_mode_client.call(offb_set_mode) &&
-                offb_set_mode.response.mode_sent){
+                offb_set_mode.response.mode_sent)
+            {
                 ROS_INFO("Offboard enabled");
             }
             last_request = ros::Time::now();
-        } else {
+        }
+        else
+        {
             if( !current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0))){
+                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            {
                 if( arming_client.call(arm_cmd) &&
-                    arm_cmd.response.success){
+                    arm_cmd.response.success)
+                {
                     ROS_INFO("Vehicle armed");
                 }
                 last_request = ros::Time::now();
             }
         }
+
 
         if(ros::Time::now() - last_setpose > ros::Duration(15.0))
         {
@@ -89,12 +113,13 @@ int main(int argc, char **argv)
              pose.pose.position.y += 0.0;
              last_setpose = ros::Time::now();
         }
+
         local_pos_pub.publish(pose);
 
         ros::spinOnce();
         rate.sleep();
 
-        
+
     }
 
     return 0;
