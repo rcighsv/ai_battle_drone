@@ -15,6 +15,7 @@ using namespace std;
 
 mavros_msgs::State current_state;
 ros::Publisher image_pub;
+geometry_msgs::PoseStamped pose;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
@@ -23,6 +24,14 @@ void camera_cb(const sensor_msgs::Image::ConstPtr& msg)
 {
     //cout << "Inside camera_cb" << endl;
     image_pub.publish(msg);
+}
+
+void coord_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+  cout << "inside coord_cb" << endl;
+  pose.pose.position.x = msg->pose.position.x;
+  pose.pose.position.y = msg->pose.position.y;
+  pose.pose.position.z = msg->pose.position.z;
 }
 
 int main(int argc, char **argv)
@@ -36,6 +45,9 @@ int main(int argc, char **argv)
             ("iris_1/camera_down/image_raw", 10, camera_cb);
     image_pub = nh.advertise<sensor_msgs::Image>
             ("/camera_rect/image_rect", 10);
+
+    ros::Subscriber coord_sub = nh.subscribe<geometry_msgs::PoseStamped>
+            ("keyboard_input/coord_msg", 10, coord_cb);
 
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
@@ -54,7 +66,7 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    geometry_msgs::PoseStamped pose;
+
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
     pose.pose.position.z = 2;
@@ -109,8 +121,8 @@ int main(int argc, char **argv)
 
         if(ros::Time::now() - last_setpose > ros::Duration(15.0))
         {
-             pose.pose.position.x -= 5.0;
-             pose.pose.position.y += 0.0;
+//             pose.pose.position.x -= 5.0;
+             //pose.pose.position.y += 0.0;
              last_setpose = ros::Time::now();
         }
 
@@ -118,8 +130,6 @@ int main(int argc, char **argv)
 
         ros::spinOnce();
         rate.sleep();
-
-
     }
 
     return 0;
