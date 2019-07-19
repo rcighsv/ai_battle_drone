@@ -77,12 +77,11 @@ int main(int argc, char **argv)
             ("keyboard_input/coord_msg", 10, coord_cb);
 
 
-
-
     image_pub = nh.advertise<sensor_msgs::Image>
             ("/camera_rect/image_rect", 10);
     image_info_pub = nh.advertise<sensor_msgs::CameraInfo>
             ("/camera_rect/camera_info", 10);
+
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
