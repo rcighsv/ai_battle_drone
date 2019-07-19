@@ -10,12 +10,19 @@
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/CameraInfo.h>
+
+//#include <apriltags2_ros/AprilTagDetectionArray.h>
+#include <apriltag_ros/AprilTagDetectionArray.h>
+
 
 using namespace std;
 
 mavros_msgs::State current_state;
 ros::Publisher image_pub;
+ros::Publisher image_info_pub;
 geometry_msgs::PoseStamped pose;
+
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
@@ -26,12 +33,25 @@ void camera_cb(const sensor_msgs::Image::ConstPtr& msg)
     image_pub.publish(msg);
 }
 
+void camera_info_cb(const sensor_msgs::CameraInfo::ConstPtr& msg)
+{
+    //cout << "Inside camera_cb" << endl;
+    image_info_pub.publish(msg);
+}
+
+
 void coord_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
   cout << "inside coord_cb" << endl;
   pose.pose.position.x = msg->pose.position.x;
   pose.pose.position.y = msg->pose.position.y;
   pose.pose.position.z = msg->pose.position.z;
+}
+
+
+void tag_detect_cb(const apriltag_ros::AprilTagDetectionArray::ConstPtr& msg)
+{
+    cout << "inside tag_detect_cb" << endl;
 }
 
 int main(int argc, char **argv)
@@ -41,14 +61,28 @@ int main(int argc, char **argv)
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
             ("mavros/state", 10, state_cb);
+
     ros::Subscriber camera_sub = nh.subscribe<sensor_msgs::Image>
             ("iris_1/camera_down/image_raw", 10, camera_cb);
-    image_pub = nh.advertise<sensor_msgs::Image>
-            ("/camera_rect/image_rect", 10);
+
+    ros::Subscriber camera_info_sub = nh.subscribe<sensor_msgs::CameraInfo>
+            ("iris_1/camera_down/camera_info", 10, camera_info_cb);
+
+    ros::Subscriber tag_detect_sub = nh.subscribe<apriltag_ros::AprilTagDetectionArray>
+            ("apriltag_ros/AprilTagDetectionArray", 10, &tag_detect_cb);
+//ros::Subscriber apriltag_sub = nodeHandle.subscribe<apriltag_ros::AprilTagDetectionArray>
+//            ("apriltag_ros/AprilTagDetectionArray", 10, &apriltag_cb);
 
     ros::Subscriber coord_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("keyboard_input/coord_msg", 10, coord_cb);
 
+
+
+
+    image_pub = nh.advertise<sensor_msgs::Image>
+            ("/camera_rect/image_rect", 10);
+    image_info_pub = nh.advertise<sensor_msgs::CameraInfo>
+            ("/camera_rect/camera_info", 10);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>

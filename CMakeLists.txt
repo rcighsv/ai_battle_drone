@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   mavros_msgs
   roscpp
+  apriltag_ros
 )
 
 ## System dependencies are found with CMake's conventions
