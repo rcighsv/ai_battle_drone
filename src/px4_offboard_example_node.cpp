@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             ("iris_1/camera_down/camera_info", 10, camera_info_cb);
 
     ros::Subscriber tag_detect_sub = nh.subscribe<apriltag_ros::AprilTagDetectionArray>
-            ("apriltag_ros/AprilTagDetectionArray", 10, &tag_detect_cb);
+            ("/tag_detections", 10, &tag_detect_cb);
 //ros::Subscriber apriltag_sub = nodeHandle.subscribe<apriltag_ros::AprilTagDetectionArray>
 //            ("apriltag_ros/AprilTagDetectionArray", 10, &apriltag_cb);
 
