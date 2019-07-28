@@ -3,7 +3,7 @@ project(px4_offboard_example)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
-
+set (OpenCV_DIR /usr/share/OpenCV)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -12,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   roscpp
   apriltag_ros
+  cv_bridge
+  image_transport
+  OpenCV REQUIRED
 )
 
 ## System dependencies are found with CMake's conventions
@@ -149,6 +152,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBS}
  )
 
 #############
